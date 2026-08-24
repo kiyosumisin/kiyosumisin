@@ -134,7 +134,7 @@ export default function Home() {
           alt="chibi" />
         <div style={{flex: 1}}>
           <iframe
-            src="https://open.spotify.com/embed/track/1cdYOCmpgVLzqI8GV1pjQZ"
+            src="https://open.spotify.com/track/7AszT06Rsoj1SQTWmFzdmw?si=4CzkPeLeSDe_1XWs37mFoQ&utm_source=copy-link&rowId=47e1b442c788842d&nd=1&dlsi=abc8758ac53d42e0"
             width="100%" height="152" frameBorder="0"
             style={{borderRadius: '12px', display: 'block'}}
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
