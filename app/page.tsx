@@ -1,43 +1,37 @@
 "use client"
-import { useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import Image from 'next/image'
 import { FaDiscord, FaGithub, FaXTwitter } from 'react-icons/fa6'
 import { SiGmail } from 'react-icons/si'
+import { FiMenu, FiMoon, FiSun, FiX } from 'react-icons/fi'
 
 export default function Home() {
   const [lang, setLang] = useState('EN')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const content = {
     EN: {
       title: 'This is my Personal Profile',
-      fullname: 'Full Name: Kiyosumi Sin',
       janame: 'キヨスミ・シン',
-      studied: 'University of Transport Ho Chi Minh City',
-      birthLabel: 'Birth Date:',
-      birthValue: '16/10/2006',
-      addressLabel: 'Address:',
-      addressValue: 'Ho Chi Minh City',
+      about: 'About Me',
+      lead: "Hi, I'm Kiyosumi Sin — キヨスミ・シン.",
+      body: "I live in Ho Chi Minh City and I'm currently studying data science and AI. In my free time I love playing games and listening to J-pop and Western pop. I speak Vietnamese and English, and I'm learning Japanese.",
       contact: 'Contact Me',
     },
     VI: {
-      title: 'Đây là Hồ Sơ Cá Nhân của tôi',
-      fullname: 'Họ và Tên: Kiyosumi Sin',
+      title: 'Đây là Hồ Sơ Cá Nhân của mình',
       janame: 'キヨスミ・シン',
-      studied: 'Đại học Giao thông Vận tải TP. Hồ Chí Minh',
-      birthLabel: 'Ngày Sinh:',
-      birthValue: '16/10/2006',
-      addressLabel: 'Địa Chỉ:',
-      addressValue: 'TP. Hồ Chí Minh',
+      about: 'Giới Thiệu',
+      lead: 'Xin chào, mình là Kiyosumi Sin — キヨスミ・シン.',
+      body: 'Mình hiện đang sống tại TP. Hồ Chí Minh và đang theo học về khoa học dữ liệu và AI. Lúc rảnh, mình thích chơi game và nghe nhạc J-pop lẫn US-UK. Mình nói được tiếng Việt, tiếng Anh và đang học tiếng Nhật.',
       contact: 'Liên Hệ',
     },
     JP: {
       title: 'これは私のプロフィールです',
-      fullname: '氏名：キヨスミ・シン',
       janame: 'キヨスミ・シン',
-      studied: 'ホーチミン市交通運輸大学',
-      birthLabel: '生年月日：',
-      birthValue: '2006年10月16日',
-      addressLabel: '住所：',
-      addressValue: 'ホーチミン市',
+      about: '自己紹介',
+      lead: 'はじめまして、キヨスミ・シンです。',
+      body: 'ホーチミン市に住んでいて、今はデータサイエンスとAIを勉強しています。ゲームをするのが好きで、J-POPや洋楽をよく聴きます。ベトナム語と英語が話せて、日本語を勉強中です。',
       contact: 'お問い合わせ',
     },
   }
@@ -67,191 +61,193 @@ export default function Home() {
     }
   }
 
-  const cardStyle = {
-    background: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '24px 16px',
-    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px',
-    border: '1px solid rgba(255,255,255,0.2)', transition: 'all 0.3s ease',
+  const toggleTheme = () => {
+    const dark = document.documentElement.classList.toggle('dark')
+    try { localStorage.setItem('theme', dark ? 'dark' : 'light') } catch {}
   }
 
-  const btnStyle = {
-    marginTop: '4px', padding: '6px 16px', borderRadius: '20px',
-    background: 'rgba(255,255,255,0.2)', color: '#ffffff',
-    textDecoration: 'none', fontSize: '13px', border: '1px solid rgba(255,255,255,0.3)'
-  }
+  const stalker = useRef<HTMLDivElement>(null)
+
+  // Cursor ring + ✦ on click. Plain DOM, no animation lib.
+  useEffect(() => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const move = (e: PointerEvent) => {
+      const s = stalker.current
+      if (!s) return
+      s.style.opacity = '1'
+      s.style.translate = `${e.clientX}px ${e.clientY}px`
+    }
+    const click = (e: MouseEvent) => {
+      const star = document.createElement('span')
+      star.className = 'click-star'
+      star.textContent = '✦'
+      star.style.left = `${e.clientX}px`
+      star.style.top = `${e.clientY}px`
+      star.onanimationend = () => star.remove()
+      document.body.appendChild(star)
+    }
+    addEventListener('pointermove', move, { passive: true })
+    addEventListener('click', click)
+    return () => {
+      removeEventListener('pointermove', move)
+      removeEventListener('click', click)
+    }
+  }, [])
+
+  const fx = (i: number) => ({ 'data-fx': true, style: { '--i': i } as CSSProperties })
+
+  const contacts = [
+    { name: 'Discord', handle: '_kiyosumisin', href: 'https://discord.com/users/_kiyosumisin', Icon: FaDiscord, brand: '#5865F2' },
+    { name: 'Gmail', handle: 'sunaookamishirokoneko@gmail.com', href: 'mailto:sunaookamishirokoneko@gmail.com', Icon: SiGmail, brand: '#EA4335' },
+    { name: 'GitHub', handle: 'kiyosumisin', href: 'https://github.com/kiyosumisin', Icon: FaGithub, brand: 'var(--foreground)' },
+    { name: 'X', handle: '@SunaoShiroko', href: 'https://x.com/SunaoShiroko', Icon: FaXTwitter, brand: 'var(--foreground)' },
+  ]
+
+  const socials = (
+    <ul className="flex items-center gap-1">
+      {contacts.map(({ name, handle, href, Icon, brand }) => (
+        <li key={name}>
+          <a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer"
+            aria-label={`${name}: ${handle}`} title={`${name} · ${handle}`}
+            style={{ '--brand': brand } as CSSProperties}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors duration-300 hover:text-[var(--brand)]">
+            <Icon size={18} />
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+
+  const navItems = ['About Me', 'Projects', 'Gallery'].map((item, i) => (
+    <button key={item} type="button" aria-current={i === 0 || undefined}
+      className="navlink text-sm tracking-[0.06em] text-muted transition-colors hover:text-foreground aria-[current]:text-foreground">
+      <span className="mr-1.5 font-mono text-[10px] text-accent">0{i + 1}</span>{item}
+    </button>
+  ))
+
+  const themeButton = (show: string) => (
+    <button type="button" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle theme"
+      className={`${show} h-10 w-10 items-center justify-center rounded-full border border-border transition-colors hover:text-accent`}>
+      <FiMoon size={17} className="dark:hidden" />
+      <FiSun size={17} className="hidden dark:block" />
+    </button>
+  )
+
+  const label = 'font-mono text-xs uppercase tracking-[0.5em] text-accent'
+  const glass = 'rounded-2xl border border-border bg-card/60 backdrop-blur-sm'
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
-      style={{
-        backgroundImage: 'url(/sin.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}>
+    <>
+      <div ref={stalker} className="stalker" aria-hidden="true" />
 
-      {/* Marquee */}
-      <div className="fixed top-0 w-full overflow-hidden py-2 z-20"
-        style={{background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', color: '#f0e8ff', fontSize: '14px'}}>
-        <div className="animate-marquee whitespace-nowrap">
-          {getGreeting()}
+      <header className={`fixed inset-x-0 top-0 z-40 backdrop-blur-md transition-colors ${menuOpen ? 'bg-background/95' : 'bg-background/40'}`}>
+        {/* Marquee */}
+        <div className="overflow-hidden border-b border-border py-1.5 font-mono text-xs tracking-[0.15em] text-muted">
+          <div className="animate-marquee whitespace-nowrap">{getGreeting()}</div>
         </div>
-      </div>
 
-      {/* Navbar */}
-      <nav className="fixed top-8 z-10 flex gap-4 px-6 py-3 rounded-full shadow"
-        style={{background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)'}}>
-        <button style={{color: '#ffffff'}} className="font-semibold">About Me</button>
-        <button style={{color: '#d8c8ff'}}>Projects</button>
-        <button style={{color: '#d8c8ff'}}>Gallery</button>
-        <span style={{color: '#d8c8ff', margin: '0 8px'}}>|</span>
-        <button onClick={() => setLang('EN')}
-          style={{color: lang === 'EN' ? '#ffffff' : '#d8c8ff', fontWeight: lang === 'EN' ? '600' : '400'}}>
-          EN
-        </button>
-        <button onClick={() => setLang('VI')}
-          style={{color: lang === 'VI' ? '#ffffff' : '#d8c8ff', fontWeight: lang === 'VI' ? '600' : '400'}}>
-          VI
-        </button>
-        <button onClick={() => setLang('JP')}
-          style={{color: lang === 'JP' ? '#ffffff' : '#d8c8ff', fontWeight: lang === 'JP' ? '600' : '400'}}>
-          日本語
-        </button>
-      </nav>
+        {/* Navbar */}
+        <nav className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-6 md:gap-10">
+          <a href="#about" className="whitespace-nowrap font-serif text-lg tracking-[0.08em] md:text-xl">
+            KiyosumiSin<span className="text-accent">.</span>
+          </a>
+          <div className="hidden items-center gap-8 md:flex">{navItems}</div>
+          <div className="ml-auto flex items-center gap-2 md:gap-3">
+            <div className="hidden lg:block">{socials}</div>
+            <div role="group" aria-label="Language" className="flex items-center rounded-full border border-border text-xs">
+              {([['EN', 'EN'], ['VI', 'VI'], ['JP', '日本語']] as const).map(([code, name]) => (
+                <button key={code} type="button" onClick={() => setLang(code)} aria-pressed={lang === code}
+                  className={`whitespace-nowrap rounded-full px-2.5 py-1 font-mono uppercase tracking-[0.08em] transition-colors ${
+                    lang === code ? 'bg-foreground text-background' : 'text-muted hover:text-foreground'
+                  }`}>
+                  {name}
+                </button>
+              ))}
+            </div>
+            {themeButton('hidden md:flex')}
+            <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu"
+              aria-expanded={menuOpen} aria-controls="mobile-menu"
+              className="flex h-10 w-10 items-center justify-center lg:hidden">
+              {menuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+            </button>
+          </div>
+        </nav>
 
-      {/* Title */}
-      <h1 className="text-5xl font-bold mt-20 text-center"
-        style={{fontFamily: 'cursive', color: '#ffffff', textShadow: '0 0 12px rgba(180,120,255,0.8)'}}>
-        {t.title}
-      </h1>
+        {/* Mobile menu: nav + socials + theme (header has no room for them) */}
+        {menuOpen && (
+          <div id="mobile-menu" className="border-t border-border lg:hidden">
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-5">
+              <div className="flex flex-col items-start gap-4 md:hidden">{navItems}</div>
+              <div className="flex items-center justify-between">
+                {socials}
+                {themeButton('flex md:hidden')}
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
 
-      {/* Spotify widget */}
-      <div className="mt-4 rounded-2xl shadow-md"
-        style={{
-          width: '600px', background: 'rgba(255,255,255,0.15)',
-          backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)',
-          padding: '12px', display: 'flex', alignItems: 'center', gap: '8px',
-        }}>
-        <img src="/chibi.png"
-          style={{width: '60px', objectFit: 'contain', transform: 'scaleX(-1)', flexShrink: 0}}
-          alt="chibi" />
-        <div style={{flex: 1}}>
-          <iframe
-            src="https://open.spotify.com/embed/track/7AszT06Rsoj1SQTWmFzdmw"
-            width="100%" height="152" frameBorder="0"
-            style={{borderRadius: '12px', display: 'block'}}
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-          />
+      <main className="flex-1">
+        {/* Hero + music */}
+        <section id="about" className="scroll-mt-28">
+          <div className="mx-auto w-full max-w-4xl px-6 pb-16 pt-36 md:pt-40">
+            <p {...fx(0)} className={label}>{t.janame}</p>
+            <h1 {...fx(1)} className="mt-5 font-serif text-4xl leading-tight tracking-[0.02em] md:text-5xl">
+              {t.title}
+            </h1>
+
+            <div {...fx(2)} className={`mt-10 overflow-hidden ${glass}`}>
+              <Image src="/sin.png" alt="Kiyosumi Sin" width={2560} height={1440} preload
+                sizes="(min-width: 896px) 848px, 100vw" className="aspect-video w-full object-cover" />
+            </div>
+
+            {/* Spotify widget */}
+            <div {...fx(3)} className={`mt-6 flex items-center gap-3 p-1 sm:p-3 ${glass}`}>
+              <Image src="/chibi.png" alt="chibi" width={60} height={60} className="hidden shrink-0 -scale-x-100 sm:block" />
+              <iframe
+                src="https://open.spotify.com/embed/track/7AszT06Rsoj1SQTWmFzdmw"
+                width="100%" height="152" className="min-w-0 flex-1 rounded-xl"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+              />
+              <Image src="/chibi.png" alt="chibi" width={60} height={60} className="hidden shrink-0 sm:block" />
+            </div>
+          </div>
+        </section>
+
+        {/* Intro */}
+        <section className="hairlines border-t border-border">
+          <div className="mx-auto grid w-full max-w-4xl items-center gap-10 px-6 py-14 md:grid-cols-[1fr_2fr] md:py-16">
+            <div className="relative mx-auto w-full max-w-[220px]">
+              <div className="absolute inset-6 rounded-full bg-accent/15 blur-2xl" aria-hidden="true" />
+              <Image src="/chibi.png" alt="chibi" width={360} height={360} className="relative h-auto w-full" />
+            </div>
+            <div>
+              <p className={label}>{t.about}</p>
+              <p className="mt-6 font-serif text-2xl italic leading-10 md:text-[1.7rem]">{t.lead}</p>
+              <p className="mt-4 max-w-prose leading-8 text-muted">{t.body}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact */}
+        <section id="contact" className="scroll-mt-28 border-t border-border">
+          <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-5 px-6 py-14 text-center md:py-16">
+            <p className={label}>{t.contact}</p>
+            <a href="mailto:sunaookamishirokoneko@gmail.com"
+              className="navlink break-all font-mono text-xl tracking-[0.04em] text-accent md:text-2xl">
+              sunaookamishirokoneko@gmail.com
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-border">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-6 py-12 text-center">
+          <p className="font-serif text-lg tracking-[0.08em]">KiyosumiSin<span className="text-accent">.</span></p>
+          <p className="font-mono text-[11px] tracking-[0.08em] text-muted">© 2026 Kiyosumi Sin</p>
         </div>
-        <img src="/chibi.png"
-          style={{width: '60px', objectFit: 'contain', flexShrink: 0}}
-          alt="chibi" />
-      </div>
-
-      {/* Info card */}
-      <div className="mt-6 rounded-2xl p-8 text-center shadow-md"
-        style={{
-          background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.3)', transition: 'all 0.3s ease', width: '600px',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.25)'
-          e.currentTarget.style.transform = 'translateY(-4px)'
-          e.currentTarget.style.boxShadow = '0 8px 32px rgba(180,120,255,0.4)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = 'none'
-        }}>
-        <p className="text-2xl font-semibold mb-3"
-          style={{color: '#ffffff', fontFamily: 'cursive', textShadow: '0 0 8px rgba(180,120,255,0.6)'}}>
-          {t.fullname}
-        </p>
-        <p style={{color: '#ffffff', letterSpacing: '4px', fontSize: '15px', marginBottom: '8px'}}>
-          {t.janame}
-        </p>
-        <p style={{color: '#d8c8ff', marginBottom: '8px', fontSize: '16px'}}>
-          --- Studied at: <span style={{color: '#a8d8ff', fontWeight: '500'}}>{t.studied}</span> ---
-        </p>
-        <p style={{color: '#d8c8ff', marginBottom: '8px'}}>
-          {t.birthLabel} <span style={{color: '#ffffff'}}>{t.birthValue}</span>
-        </p>
-        <p style={{color: '#d8c8ff'}}>
-          {t.addressLabel} <span style={{color: '#ffffff'}}>{t.addressValue}</span>
-        </p>
-      </div>
-
-      {/* Contact card */}
-      <div className="mt-6 mb-10 rounded-2xl p-8 text-center shadow-md"
-        style={{
-          background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.3)', width: '600px',
-        }}>
-        <p className="text-xl font-semibold mb-6"
-          style={{color: '#ffffff', fontFamily: 'cursive', textShadow: '0 0 8px rgba(180,120,255,0.6)'}}>
-          {t.contact}
-        </p>
-
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px'}}>
-
-          {/* Discord */}
-          <div style={cardStyle}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-4px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
-            <div style={{background: 'rgba(88,101,242,0.3)', borderRadius: '12px', padding: '12px'}}>
-              <FaDiscord size={32} color="#7289da" />
-            </div>
-            <p style={{color: '#ffffff', fontFamily: 'cursive', fontSize: '18px'}}>Discord</p>
-            <p style={{color: '#d8c8ff', fontSize: '13px'}}>_kiyosumisin</p>
-            <a href="https://discord.com/users/_kiyosumisin" target="_blank" style={btnStyle}>
-              🔗 Open Discord
-            </a>
-          </div>
-
-          {/* Gmail */}
-          <div style={cardStyle}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-4px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
-            <div style={{background: 'rgba(234,67,53,0.3)', borderRadius: '12px', padding: '12px'}}>
-              <SiGmail size={32} color="#ea4335" />
-            </div>
-            <p style={{color: '#ffffff', fontFamily: 'cursive', fontSize: '18px'}}>Gmail</p>
-            <p style={{color: '#d8c8ff', fontSize: '13px'}}>sunaookamishirokoneko@gmail.com</p>
-            <a href="mailto:sunaookamishirokoneko@gmail.com" style={btnStyle}>
-              🔗 Send Email
-            </a>
-          </div>
-
-          {/* GitHub */}
-          <div style={cardStyle}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-4px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
-            <div style={{background: 'rgba(255,255,255,0.2)', borderRadius: '12px', padding: '12px'}}>
-              <FaGithub size={32} color="#ffffff" />
-            </div>
-            <p style={{color: '#ffffff', fontFamily: 'cursive', fontSize: '18px'}}>GitHub</p>
-            <p style={{color: '#d8c8ff', fontSize: '13px'}}>kiyosumisin</p>
-            <a href="https://github.com/kiyosumisin" target="_blank" style={btnStyle}>
-              🔗 View Profile
-            </a>
-          </div>
-
-          {/* X */}
-          <div style={cardStyle}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-4px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
-            <div style={{background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '12px'}}>
-              <FaXTwitter size={32} color="#ffffff" />
-            </div>
-            <p style={{color: '#ffffff', fontFamily: 'cursive', fontSize: '18px'}}>X</p>
-            <p style={{color: '#d8c8ff', fontSize: '13px'}}>@SunaoShiroko</p>
-            <a href="https://x.com/SunaoShiroko" target="_blank" style={btnStyle}>
-              🔗 Open X
-            </a>
-          </div>
-
-        </div>
-      </div>
-
-    </main>
+      </footer>
+    </>
   )
 }
