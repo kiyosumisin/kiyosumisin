@@ -78,7 +78,7 @@ html {
   background-size: 180px 180px;
   opacity: 0.45;
   --drift: -180px;
-  animation: star-drift 280s linear infinite;
+  animation: star-drift 120s linear infinite;
 }
 .sky-stars-mid {
   background-image:
@@ -91,7 +91,7 @@ html {
   opacity: 0.7;
   --drift: -300px;
   animation:
-    star-drift 220s linear infinite,
+    star-drift 85s linear infinite,
     star-twinkle 7s ease-in-out infinite alternate-reverse;
 }
 .sky-stars-near {
@@ -104,7 +104,7 @@ html {
   background-size: 420px 420px;
   --drift: -420px;
   animation:
-    star-drift 160s linear infinite,
+    star-drift 55s linear infinite,
     star-twinkle 5.5s ease-in-out infinite alternate;
 }
 @keyframes star-drift {
@@ -113,6 +113,26 @@ html {
 @keyframes star-twinkle {
   from { opacity: 0.5; }
   to { opacity: 1; }
+}
+
+/* Shooting star: a short streak that flashes across, then waits out the rest of its cycle. */
+.shooting-star {
+  position: absolute;
+  width: 140px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--star), transparent);
+  filter: drop-shadow(0 0 4px var(--glow));
+  transform-origin: left center;
+  opacity: 0;
+  animation: shoot var(--dur, 14s) ease-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes shoot {
+  0% { transform: rotate(-32deg) translateX(0) scaleX(0.2); opacity: 0; }
+  1.5% { opacity: 1; }
+  8% { transform: rotate(-32deg) translateX(-42vw) scaleX(1); opacity: 0; }
+  100% { transform: rotate(-32deg) translateX(-42vw) scaleX(1); opacity: 0; }
 }
 
 .nebula {
@@ -192,6 +212,78 @@ html {
   to { transform: translate(-50%, -90%) scale(0.4) rotate(20deg); opacity: 0; }
 }
 
+/* ---------- Vinyl record ---------- */
+/* Phones: the record peeks out above the player. sm+: it slides out to the right. */
+.vinyl-deck {
+  position: relative;
+  padding-top: 64px;
+}
+.vinyl {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  width: 128px;
+  aspect-ratio: 1;
+  translate: 0 36px;
+  transition: translate 0.9s cubic-bezier(0.2, 1, 0.2, 1);
+}
+.vinyl[data-playing="true"] {
+  translate: 0 0;
+}
+@media (min-width: 640px) {
+  .vinyl-deck { padding-top: 0; padding-right: 64px; }
+  .vinyl { top: 12px; right: 0; translate: -40px 0; }
+  .vinyl[data-playing="true"] { translate: 0 0; }
+}
+
+.vinyl-disc {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #0c0c10 0 1.5px, #1b1b22 1.5px 3px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  animation: vinyl-spin 3.6s linear infinite paused;
+}
+.vinyl[data-playing="true"] .vinyl-disc {
+  animation-play-state: running;
+}
+@keyframes vinyl-spin {
+  to { rotate: 360deg; }
+}
+/* spindle hole */
+.vinyl-disc::after {
+  content: "";
+  position: absolute;
+  inset: calc(50% - 3px);
+  border-radius: 50%;
+  background: var(--background);
+}
+/* light sheen that stays still while the grooves turn */
+.vinyl::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(
+    from 30deg,
+    transparent 0 8%,
+    rgb(255 255 255 / 0.1) 12%,
+    transparent 18% 58%,
+    rgb(255 255 255 / 0.1) 62%,
+    transparent 68%
+  );
+}
+.vinyl-label {
+  position: absolute;
+  inset: 32%;
+  width: 36%;
+  height: 36%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 /* ---------- Details ---------- */
 .navlink {
   position: relative;
@@ -246,5 +338,8 @@ html {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .sky-stars, .moon, .feather, [data-fx], .animate-marquee { animation: none; }
+  .shooting-star { display: none; }
+  .vinyl-disc { animation: none; }
+  .vinyl { transition: none; }
   .stalker, .click-star { display: none; }
 }

@@ -53,6 +53,9 @@ export default function RootLayout({
           <span className="feather" style={{ top: "64%", left: "3%", scale: "0.7", animationDelay: "-6s", "--dur": "21s" } as React.CSSProperties} />
           <span className="feather" style={{ top: "30%", left: "93%", scale: "1.1", animationDelay: "-11s", "--dur": "19s" } as React.CSSProperties} />
           <span className="sky-stars sky-stars-near" />
+          <span className="shooting-star" style={{ top: "12%", left: "78%", "--dur": "13s", "--delay": "2s" } as React.CSSProperties} />
+          <span className="shooting-star" style={{ top: "30%", left: "55%", "--dur": "19s", "--delay": "9s" } as React.CSSProperties} />
+          <span className="shooting-star" style={{ top: "6%", left: "40%", "--dur": "23s", "--delay": "15s" } as React.CSSProperties} />
         </div>
         {children}
       </body>

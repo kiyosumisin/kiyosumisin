@@ -5,15 +5,40 @@ import { FaDiscord, FaGithub, FaXTwitter } from 'react-icons/fa6'
 import { SiGmail } from 'react-icons/si'
 import { FiMenu, FiMoon, FiSun, FiX } from 'react-icons/fi'
 
+// Change the song here; the cover art is fetched from Spotify.
+const TRACK = '7AszT06Rsoj1SQTWmFzdmw'
+
+type SpotifyController = {
+  addListener: (event: 'playback_update', fn: (e: { data: { isPaused: boolean } }) => void) => void
+  destroy: () => void
+}
+type SpotifyApi = {
+  createController: (el: HTMLElement, options: object, ready: (c: SpotifyController) => void) => void
+}
+
+// Load Spotify's iFrame API once per page; it tells us when the track plays or pauses.
+let spotifyApi: Promise<SpotifyApi> | undefined
+const loadSpotifyApi = () => spotifyApi ??= new Promise((resolve) => {
+  (window as unknown as { onSpotifyIframeApiReady: (api: SpotifyApi) => void }).onSpotifyIframeApiReady = resolve
+  const s = document.createElement('script')
+  s.src = 'https://open.spotify.com/embed/iframe-api/v1'
+  s.async = true
+  document.body.appendChild(s)
+})
+
 export default function Home() {
   const [lang, setLang] = useState('EN')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [playing, setPlaying] = useState(false)
+  const [cover, setCover] = useState<string>()
+  const playerWrap = useRef<HTMLDivElement>(null)
 
   const content = {
     EN: {
       title: 'This is my Personal Profile',
       janame: 'キヨスミ・シン',
       about: 'About Me',
+      nowPlaying: 'Now Playing',
       lead: "Hi, I'm Kiyosumi Sin — キヨスミ・シン.",
       body: "I live in Ho Chi Minh City and I'm currently studying data science and AI. In my free time I love playing games and listening to J-pop and Western pop. I speak Vietnamese and English, and I'm learning Japanese.",
       contact: 'Contact Me',
@@ -22,6 +47,7 @@ export default function Home() {
       title: 'Đây là Hồ Sơ Cá Nhân của mình',
       janame: 'キヨスミ・シン',
       about: 'Giới Thiệu',
+      nowPlaying: 'Đang Nghe',
       lead: 'Xin chào, mình là Kiyosumi Sin — キヨスミ・シン.',
       body: 'Mình hiện đang sống tại TP. Hồ Chí Minh và đang theo học về khoa học dữ liệu và AI. Lúc rảnh, mình thích chơi game và nghe nhạc J-pop lẫn US-UK. Mình nói được tiếng Việt, tiếng Anh và đang học tiếng Nhật.',
       contact: 'Liên Hệ',
@@ -30,6 +56,7 @@ export default function Home() {
       title: 'これは私のプロフィールです',
       janame: 'キヨスミ・シン',
       about: '自己紹介',
+      nowPlaying: '再生中',
       lead: 'はじめまして、キヨスミ・シンです。',
       body: 'ホーチミン市に住んでいて、今はデータサイエンスとAIを勉強しています。ゲームをするのが好きで、J-POPや洋楽をよく聴きます。ベトナム語と英語が話せて、日本語を勉強中です。',
       contact: 'お問い合わせ',
@@ -91,6 +118,31 @@ export default function Home() {
     return () => {
       removeEventListener('pointermove', move)
       removeEventListener('click', click)
+    }
+  }, [])
+
+  // Spotify player + cover art. The API swaps a target node for its iframe, so give it
+  // a node React doesn't own.
+  useEffect(() => {
+    let cancelled = false
+    let controller: SpotifyController | undefined
+    loadSpotifyApi().then((api) => {
+      const wrap = playerWrap.current
+      if (cancelled || !wrap) return
+      const target = document.createElement('div')
+      wrap.replaceChildren(target)
+      api.createController(target, { uri: `spotify:track:${TRACK}`, width: '100%', height: 152, theme: 'dark' }, (c) => {
+        controller = c
+        c.addListener('playback_update', (e) => setPlaying(!e.data.isPaused))
+      })
+    })
+    fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${TRACK}`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setCover(d.thumbnail_url) })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+      controller?.destroy()
     }
   }, [])
 
@@ -188,7 +240,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        {/* Hero + music */}
+        {/* Hero */}
         <section id="about" className="scroll-mt-28">
           <div className="mx-auto w-full max-w-4xl px-6 pb-16 pt-36 md:pt-40">
             <p {...fx(0)} className={label}>{t.janame}</p>
@@ -199,18 +251,6 @@ export default function Home() {
             <div {...fx(2)} className={`mt-10 overflow-hidden ${glass}`}>
               <Image src="/sin.png" alt="Kiyosumi Sin" width={2560} height={1440} preload
                 sizes="(min-width: 896px) 848px, 100vw" className="aspect-video w-full object-cover" />
-            </div>
-
-            {/* Spotify widget */}
-            <div {...fx(3)} className={`mt-6 flex items-center gap-3 p-1 sm:p-3 ${glass}`}>
-              <Image src="/chibi.png" alt="chibi" width={60} height={60} className="hidden shrink-0 -scale-x-100 sm:block" />
-              <iframe
-                src="https://open.spotify.com/embed/track/7AszT06Rsoj1SQTWmFzdmw"
-                width="100%" height="152" className="min-w-0 flex-1 rounded-xl"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-              />
-              <Image src="/chibi.png" alt="chibi" width={60} height={60} className="hidden shrink-0 sm:block" />
             </div>
           </div>
         </section>
@@ -226,6 +266,20 @@ export default function Home() {
               <p className={label}>{t.about}</p>
               <p className="mt-6 font-serif text-2xl italic leading-10 md:text-[1.7rem]">{t.lead}</p>
               <p className="mt-4 max-w-prose leading-8 text-muted">{t.body}</p>
+
+              {/* Record slides out of the Spotify "sleeve" and spins while the track plays */}
+              <p className={`mt-10 ${label}`}>{t.nowPlaying}</p>
+              <div className="vinyl-deck mt-4">
+                <div className="vinyl" data-playing={playing} aria-hidden="true">
+                  <div className="vinyl-disc">
+                    {cover && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={cover} alt="" className="vinyl-label" />
+                    )}
+                  </div>
+                </div>
+                <div ref={playerWrap} className="relative h-[152px] overflow-hidden rounded-xl bg-card" />
+              </div>
             </div>
           </div>
         </section>
@@ -235,7 +289,7 @@ export default function Home() {
           <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-5 px-6 py-14 text-center md:py-16">
             <p className={label}>{t.contact}</p>
             <a href="mailto:sunaookamishirokoneko@gmail.com"
-              className="navlink break-all font-mono text-xl tracking-[0.04em] text-accent md:text-2xl">
+              className="navlink break-all font-mono text-base tracking-[0.04em] text-accent sm:text-xl md:text-2xl">
               sunaookamishirokoneko@gmail.com
             </a>
           </div>
