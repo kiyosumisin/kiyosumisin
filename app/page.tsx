@@ -149,7 +149,7 @@ export default function Home() {
   const fx = (i: number) => ({ 'data-fx': true, style: { '--i': i } as CSSProperties })
 
   const contacts = [
-    { name: 'Discord', handle: '_kiyosumisin', href: 'https://discord.com/users/_kiyosumisin', Icon: FaDiscord, brand: '#5865F2' },
+    { name: 'Discord', handle: '_kiyosumisin', href: 'https://discord.com/users/849917651786268703', Icon: FaDiscord, brand: '#5865F2' },
     { name: 'Gmail', handle: 'sunaookamishirokoneko@gmail.com', href: 'mailto:sunaookamishirokoneko@gmail.com', Icon: SiGmail, brand: '#EA4335' },
     { name: 'GitHub', handle: 'kiyosumisin', href: 'https://github.com/kiyosumisin', Icon: FaGithub, brand: 'var(--foreground)' },
     { name: 'X', handle: '@SunaoShiroko', href: 'https://x.com/SunaoShiroko', Icon: FaXTwitter, brand: 'var(--foreground)' },
